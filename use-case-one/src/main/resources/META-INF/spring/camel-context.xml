@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Configures the Camel Context-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:amq="http://activemq.apache.org/schema/core"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd        http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+    <!-- A-MQ JMS Bean -->
+    <bean class="org.apache.activemq.ActiveMQConnectionFactory" id="connectionFactory">
+        <property name="brokerURL" value="tcp://127.0.0.1:61616"/>
+        <property name="userName" value="admin"/>
+        <property name="password" value="admin"/>
+    </bean>
+    <bean class="org.apache.activemq.camel.component.ActiveMQComponent" id="activemq">
+        <property name="connectionFactory" ref="connectionFactory"/>
+	</bean>
+    <!-- Here is a sample which processes the input files
+         (leaving them in place - see the 'noop' flag), and
+         sends them on a JMS queue. This queue is watched by
+         another route which then performs content based
+         routing on the messages using XPath. 
+  -->
+    <camelContext id="camelContext-daf4d1dd-f299-4cf3-bbdd-534d96284815" xmlns="http://camel.apache.org/schema/spring">
+        <endpoint id="EventToCSV" uri="dozer:EventToCSV?sourceModel=generated.Event&amp;targetModel=com.redhat.usecase.one.Event&amp;unmarshalId=generated&amp;mappingFile=transformation.xml"/>
+        <dataFormats>
+            <jaxb contextPath="generated" id="generated"/>
+            <bindy classType="com.redhat.usecase.one.Event"
+                id="bindyDataformat" type="Csv"/>
+        </dataFormats>
+        <route id="inject-test-event-message">
+            <from id="_from1" uri="file:src/data?noop=true"/>
+            <to id="_to1" uri="activemq:incoming.events"/>
+        </route>
+        <route id="consume-test-message">
+            <from id="_from2" uri="activemq:incoming.events"/>
+            <choice id="_choice1">
+                <when id="_when1">
+                    <xpath>/event/@type = 'adjustment'</xpath>
+                    <to id="_to2" uri="activemq:adjustments"/>
+                </when>
+                <when id="_when2">
+                    <xpath>/event/@type = 'receipt'</xpath>
+                    <to id="_to3" uri="activemq:receipt"/>
+                </when>
+                <when id="_when3">
+                    <xpath>/event/@type = 'cycle-count'</xpath>
+                    <to id="_to6" uri="ref:EventToCSV"/>
+                    <marshal id="_marshal1" ref="bindyDataformat"/>
+                    <to id="_to5" uri="file:target/events/cycle-count?fileName=${file:name.noext}.csv"/>
+                </when>
+                <otherwise id="_otherwise1">
+                    <to id="_to5" uri="file:target/events/others"/>
+                </otherwise>
+            </choice>
+        </route>
+    </camelContext>
+</beans>
