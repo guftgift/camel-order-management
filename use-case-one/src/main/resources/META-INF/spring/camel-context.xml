@@ -11,7 +11,7 @@
     </bean>
     <bean class="org.apache.activemq.camel.component.ActiveMQComponent" id="activemq">
         <property name="connectionFactory" ref="connectionFactory"/>
-	</bean>
+    </bean>
     <!-- Here is a sample which processes the input files
          (leaving them in place - see the 'noop' flag), and
          sends them on a JMS queue. This queue is watched by
@@ -47,7 +47,7 @@
                     <to id="_to5" uri="file:target/events/cycle-count?fileName=${file:name.noext}.csv"/>
                 </when>
                 <otherwise id="_otherwise1">
-                    <to id="_to5" uri="file:target/events/others"/>
+                    <to id="_to5" uri="file:target/events/others?fileName=${file:name.noext}.txt"/>
                 </otherwise>
             </choice>
         </route>
