@@ -1,8 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Configures the Camel Context-->
-<beans xmlns="http://www.springframework.org/schema/beans"
-    xmlns:amq="http://activemq.apache.org/schema/core"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd        http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+<!-- Configures the Camel Context--><beans xmlns="http://www.springframework.org/schema/beans" xmlns:amq="http://activemq.apache.org/schema/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd        http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
     <!-- A-MQ JMS Bean -->
     <bean class="org.apache.activemq.ActiveMQConnectionFactory" id="connectionFactory">
         <property name="brokerURL" value="tcp://127.0.0.1:61616"/>
@@ -14,22 +10,21 @@
     </bean>
     <!-- bridge spring property placeholder with Camel -->
     <!-- you must NOT use the <context:property-placeholder at the same time, only this bridge bean -->
-    <bean
-        class="org.apache.camel.spring.spi.BridgePropertyPlaceholderConfigurer" id="bridgePropertyPlaceholder">
+    <bean class="org.apache.camel.spring.spi.BridgePropertyPlaceholderConfigurer" id="bridgePropertyPlaceholder">
         <property name="location" value="classpath:routing.properties"/>
     </bean>
-    <camelContext id="camelContext-e144e3c3-75de-4338-aebe-81532594db20" xmlns="http://camel.apache.org/schema/spring">
+    <camelContext xmlns="http://camel.apache.org/schema/spring" id="camelContext-e144e3c3-75de-4338-aebe-81532594db20">
         <endpoint id="CSVtoXML" uri="dozer:CSVtoXML?sourceModel=com.redhat.usecase.two.Event&amp;targetModel=generated.Event&amp;marshalId=generated&amp;mappingFile=transformation.xml"/>
         <dataFormats>
             <jaxb contextPath="generated" id="generated"/>
-            <bindy classType="com.redhat.usecase.two.Event"
-                id="bindyDataformat" type="Csv"/>
+            <bindy classType="com.redhat.usecase.two.Event" id="bindyDataformat" type="Csv"/>
         </dataFormats>
         <route id="consume-etl">
+            
             <from id="_from1" uri="file:src/data?noop={{file.polling.noop}}&amp;delay={{file.polling.interval}}&amp;include=.*.csv"/>
             <unmarshal id="_marshal1" ref="bindyDataformat"/>
             <to id="_to2" uri="ref:CSVtoXML"/>
-            <to id="_to3" uri="activemq:incoming.events"/>
+         <to id="_to3" uri="activemq:incoming.events"/>
         </route>
     </camelContext>
 </beans>
